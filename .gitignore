@@ -1,0 +1,20 @@
+# Archivos temporales de MATLAB y Simulink
+slprj/
+*.slxc
+
+# Salidas auxiliares de LaTeX
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+
+# Archivos locales y temporales de PSoC Creator
+*.aldop
+*.rpt
+**/codegentemp/
+**/CortexM3/
+
+# Material de trabajo que no forma parte de la entrega
+Base para Laboratorio Control óptimo con integrador/
+tmp/

@@ -1,0 +1,242 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{balance}
+\usepackage{placeins}
+\usepackage{eso-pic}
+
+\sisetup{output-decimal-marker={,},per-mode=symbol}
+\graphicspath{{figuras/}}
+
+\title{Laboratorio 9: Control óptimo digital con acción integral en el espacio de estados}
+
+\author{\IEEEauthorblockN{Aldo Pastore}
+\IEEEauthorblockA{Automatización -- Ingeniería Electrónica\\
+Facultad de Ciencias y Tecnología\\
+Universidad Católica ``Nuestra Señora de la Asunción''\\
+Asunción, Paraguay\\
+\texttt{aldo.pastore@uc.edu.py}}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+En este laboratorio se diseñaron tres controladores LQR digitales con acción integral para una planta analógica de segundo orden. Tanto el regulador como el estimador se calcularon con el modelo identificado, porque es el que mejor representa el montaje; el modelo obtenido a partir de los componentes se utilizó para estudiar la sensibilidad del diseño. Se trabajó con $T_s=\SI{2}{ms}$ y se comprobaron la controlabilidad y la observabilidad de la planta, además de la controlabilidad del sistema aumentado. La solución iterativa de Riccati coincidió con \texttt{dlqr} con errores menores que $3,4\times10^{-11}$. En simulación, los casos 1, 2 y 3 presentaron tiempos de subida de 148, 12 y \SI{48}{ms}; en el banco se midieron 78, 10 y \SI{36}{ms}. Los errores finales fueron 0,10, 0,08 y \SI{0.46}{mV}. Se registraron 1800 muestras UART de lazo cerrado y 7200 valores con el osciloscopio, sin fallas ni saturaciones. Al terminar los ensayos se volvió a programar el modo seguro \texttt{MONITOR}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+acción integral, control digital, control óptimo, estimador actual, LQR, modelo identificado, PSoC 5LP.
+\end{IEEEkeywords}
+
+\section{Introducción}
+La realimentación de estados permite modificar la dinámica de una planta, aunque la ubicación arbitraria de polos no indica cuánto esfuerzo conviene pedir al actuador. El regulador cuadrático lineal (LQR) resuelve este compromiso mediante un índice que pondera los estados y el mando. Al incorporar la integral del error, el sistema puede seguir referencias constantes sin error permanente en el modelo lineal ideal.
+
+El trabajo se centró en comparar los tres pares de ponderaciones indicados en el enunciado, observar cómo cambian la rapidez y el esfuerzo de control, implementar el estimador actual y llevar los tres diseños al PSoC. Para que la comparación fuera válida, se mantuvieron el mismo período de muestreo, la misma referencia y el mismo procedimiento de adquisición. El diseño se realizó con el modelo identificado, siguiendo la recomendación de utilizar la representación que mejor describe la planta real.
+
+\section{Modelo de la planta}
+\subsection{Modelo nominal}
+Con $x=[x_1\;x_2]^T$ y $y=Cx$, el modelo calculado a partir de los componentes es
+\begin{equation}
+\dot{x}=F_{n}x+G_{n}u,\qquad y=Cx,
+\end{equation}
+con
+\begin{align}
+F_n&=\begin{bmatrix}-66.6667&0\\-212.7660&-666.6667\end{bmatrix},&
+G_n&=\begin{bmatrix}-212.7660\\0\end{bmatrix},\\
+C&=\begin{bmatrix}0&1\end{bmatrix}.
+\end{align}
+Este modelo no se utiliza para calcular las ganancias; se simula como perturbación estructurada respecto del identificado.
+
+\subsection{Modelo identificado adoptado}
+El modelo identificado posee ganancia $K=1.002941$ y constantes de tiempo $\tau_1=\SI{9.06915}{ms}$ y $\tau_2=\SI{0.774399}{ms}$. Al conservar estados compatibles con las tensiones internas y discretizar mediante ZOH con $T_s=\SI{2}{ms}$ se obtiene
+\begin{align}
+A_{id}&=\begin{bmatrix}
+0.802095310&0\\
+-0.249628290&0.075573620
+\end{bmatrix},\\
+B_{id}&=\begin{bmatrix}-0.631610700\\0.130459080\end{bmatrix}.
+\end{align}
+Se verificaron $\operatorname{rank}\mathcal{C}(A_{id},B_{id})=2$ y $\operatorname{rank}\mathcal{O}(A_{id},C)=2$.
+
+\subsection{Período de muestreo}
+Se adopta $T_s=\SI{2}{ms}$ y $f_s=\SI{500}{Hz}$ porque esta configuración fue validada en el PSoC, mantiene la discretización exacta mediante ZOH y deja amplio margen de ejecución para la interrupción. Cambiar el período invalidaría las ganancias, el estimador y parte de la validación de hardware disponible.
+
+\section{Control óptimo con integrador}
+El estado integral se define por
+\begin{equation}
+\xi[k+1]=\xi[k]+r[k]-y[k].
+\end{equation}
+Por tanto,
+\begin{equation}
+A_a=\begin{bmatrix}A_{id}&0\\-C&1\end{bmatrix},\qquad
+B_a=\begin{bmatrix}B_{id}\\0\end{bmatrix}.
+\end{equation}
+La matriz de controlabilidad ampliada tiene rango 3. El índice de costo es
+\begin{equation}
+J=\sum_{k=0}^{\infty}\left(x_a^T[k]Q_1x_a[k]+u^T[k]Q_2u[k]\right),
+\end{equation}
+y la ley implementada es
+\begin{equation}
+u[k]=-K_x\hat{x}[k]-K_i\xi[k].
+\end{equation}
+
+La Tabla~\ref{tab:ganancias} resume las ponderaciones normativas y las ganancias obtenidas. La solución iterativa de Riccati se detuvo cuando $\|S_{k+1}-S_k\|_{\infty}<10^{-12}$ y se verificó contra \texttt{dlqr}.
+
+\begin{table*}[!t]
+\caption{Ponderaciones, ganancias y polos calculados con el modelo identificado}
+\label{tab:ganancias}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+Caso & $\operatorname{diag}(Q_1)$ & $Q_2$ & $K_x$ & $K_i$ & Polos de lazo cerrado\\
+\midrule
+1 & $[0.01,0.01,0.001]$ & 1 & $[-0.052957,\;0.033631]$ & $-0.030994$ & $0.970117,\;0.794134,\;0.075583$\\
+2 & $[0.01,0.01,0.1]$ & 0.1 & $[-0.579807,\;0.837181]$ & $-0.773845$ & $0.663327\pm j0.200627,\;0.075585$\\
+3 & $[0.01,0.01,0.001]$ & 0.01 & $[-0.608123,\;0.257676]$ & $-0.232969$ & $0.912514,\;0.470874,\;0.076568$\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+El caso 1 requirió 395 iteraciones de Riccati, el caso 2 requirió 39 y el caso 3 requirió 129. Los errores máximos entre las ganancias iterativas y \texttt{dlqr} fueron $4.03\times10^{-12}$, $1.95\times10^{-13}$ y $3.35\times10^{-11}$, respectivamente.
+
+\section{Estimador actual}
+Como sólo se mide $y=x_2$, se emplea el siguiente estimador actual:
+\begin{align}
+\hat{x}[k]&=z[k]+L\left(y[k]-Cz[k]\right),\\
+z[k+1]&=A_{id}\hat{x}[k]+B_{id}u_{ap}[k].
+\end{align}
+Con polos $0.20\pm j0.10$ se obtiene
+\begin{equation}
+L=\begin{bmatrix}-1.860494424&0.175152235\end{bmatrix}^{T}.
+\end{equation}
+El estimador y los tres controladores se calcularon con el mismo modelo identificado, evitando la inconsistencia de diseñar el observador sobre una dinámica nominal menos representativa.
+
+La Fig.~\ref{fig:diagrama} resume la arquitectura implementada. La integral del error y la estimación de estados alimentan al regulador; la saturación y la cuantización preceden a la planta, y el estimador se corrige con la salida medida y el mando efectivamente aplicado.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.94\textwidth]{../../../05_Resultados/figuras/diagrama_bloques_lab9.png}
+\caption{Diagrama de bloques del sistema digital implementado. El regulador y el estimador emplean el modelo identificado; el actuador aplica saturación y cuantización antes de excitar la planta.}
+\label{fig:diagrama}
+\end{figure*}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{mapa_polos_lqr_lab9.png}
+\caption{Polos de los tres controladores y del estimador actual. Todos se encuentran dentro del círculo unitario.}
+\label{fig:polos}
+\end{figure}
+
+\section{Resultados de simulación}
+\subsection{Actuador ideal limitado}
+Se aplicó un pulso de \SI{50}{mV} desde \SI{64}{ms} hasta \SI{664}{ms}. La Tabla~\ref{tab:ideal} resume la planta identificada con límites $u\in[-115,107]$~mV, pero sin cuantización.
+
+\begin{table*}[!t]
+\caption{Comparación de parámetros calculados, simulados y experimentales}
+\label{tab:ideal}
+\centering
+\scriptsize
+\begin{tabular}{cclrrrrrrr}
+\toprule
+Caso & Origen & $\rho$ & $t_r$ [ms] & $t_{s,2\%}$ [ms] & $t_{s,5\%}$ [ms] & $M_p$ [\%] & $e_{ss}$ [mV] & $u_{min}$ [mV] & $u_{max}$ [mV]\\
+\midrule
+1 & Calculado & 0.970117 & 145.03 & 263.69 & 197.77 & 0 & 0 & No aplica & No aplica\\
+1 & Simulado & 0.970117 & 148 & 270 & 210 & 0 & 0.008 & 0 & 49.848\\
+1 & Experimental & No aplica & 78 & No alcanzado & 572 & 14 & 0.10 & 0 & 61\\
+\midrule
+2 & Calculado & 0.693004 & 12.00 & 21.82 & 16.36 & 1.979 & 0 & No aplica & No aplica\\
+2 & Simulado & 0.693004 & 12 & 18 & 16 & 1.935 & $\approx0$ & -18.803 & 68.656\\
+2 & Experimental & No aplica & 10 & No alcanzado & 508 & 14 & 0.08 & -21 & 77\\
+\midrule
+3 & Calculado & 0.912514 & 48.06 & 87.38 & 65.54 & 0 & 0 & No aplica & No aplica\\
+3 & Simulado & 0.912514 & 48 & 92 & 72 & 0 & $\approx0$ & 0 & 49.853\\
+3 & Experimental & No aplica & 36 & No alcanzado & 600 & 16 & 0.46 & -11 & 61\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Los valores calculados son estimaciones obtenidas a partir del polo dominante; por ello los extremos del mando no aplican a esa fila. Sus ceros no representan datos faltantes: $M_p=0$ en los casos 1 y 3 es la predicción asociada a un polo dominante real, mientras que $e_{ss}=0$ es el valor teórico debido a la acción integral. Los valores simulados provienen del modelo identificado con estimador y actuador ideal limitado; allí $M_p=0$ y $u_{min}=0$ son resultados numéricos de las trayectorias, y los errores del orden de $10^{-10}$~mV se muestran como $\approx0$. En la fila experimental del caso 1, $u_{min}=0$ es el mínimo medido por UART. Por tanto, sólo ``No aplica'' identifica una magnitud no definida y ``No alcanzado'' una condición evaluada que no llegó a cumplirse.
+
+Los valores experimentales se calcularon a partir de 600 muestras por caso y de la referencia transmitida por el propio firmware. El establecimiento experimental estricto se declara ``no alcanzado'': el ruido de medida y la cuantización impidieron permanecer hasta el fin de la meseta dentro de la banda de $\pm2\%$, equivalente a apenas $\pm\SI{1}{mV}$. La métrica robusta, que admite breves salidas causadas por ruido, fue 572, 508 y \SI{600}{ms}; los errores medios de las últimas 50 muestras fueron inferiores a \SI{0.5}{mV}.
+
+El caso 1 es el más conservador debido a la elevada penalización del esfuerzo y presenta un polo dominante en 0.9701. El caso 2 penaliza fuertemente el estado integral y reduce $Q_2$, por lo que elimina el error con mayor rapidez a cambio del mayor intervalo de mando y un pequeño sobrepasamiento. El caso 3 constituye un compromiso intermedio: es unas tres veces más rápido que el caso 1 sin sobrepasamiento en el modelo ideal.
+
+\subsection{DAC cuantizado}
+Las escalas revalidadas fueron 15.370448 mV/código para la rama positiva y 10.560423 mV/código para la negativa. Ningún caso alcanzó los límites. Los tiempos de subida fueron \SI{102}{ms}, \SI{12}{ms} y \SI{44}{ms}, y los sobrepasamientos \SI{1.42}{\percent}, \SI{3.65}{\percent} y \SI{1.42}{\percent}. El establecimiento estricto al 2\% aumentó a 596, 548 y \SI{584}{ms} porque el mando alterna entre códigos vecinos y genera un ciclo límite pequeño. Este resultado no implica pérdida de estabilidad; muestra que una banda de apenas \SI{1}{mV} es demasiado exigente frente a pasos de DAC de 10--\SI{15}{mV}.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{comparacion_lqr_identificada.png}
+\caption{Comparación de los tres diseños sobre la planta identificada con DAC cuantizado y límites del montaje.}
+\label{fig:comparacion}
+\end{figure}
+
+\subsection{Sensibilidad al modelo nominal}
+Al aplicar las mismas ganancias a la planta nominal, los tres sistemas combinados permanecieron estables. El cambio más importante apareció en el caso 2: el sobrepasamiento ideal aumentó de \SI{1.94}{\percent} a \SI{17.15}{\percent}. Esta sensibilidad refuerza la decisión de diseñar con el modelo identificado y justifica conservar el nominal únicamente como escenario de incertidumbre.
+
+\subsection{Verificación en Simulink}
+La topología Simulink se configuró con los tres juegos LQR y ambas plantas. Para la planta identificada, Simulink produjo picos de salida de 49.994, 50.968 y \SI{50.000}{mV}; los intervalos de mando fueron $[0,49.848]$, $[-18.803,68.656]$ y $[0,49.853]$~mV. Los extremos coinciden con la simulación MATLAB dentro de \SI{1}{\micro V}. El diagrama compiló con 38 bloques, 76 líneas y ninguna conexión abierta.
+
+\section{Implementación y validación en PSoC}
+Se integró un workspace autónomo denominado \texttt{Lab9} con modo \texttt{MONITOR} predeterminado, enclavamientos de compilación, saturación, anti-windup, estimador actual, telemetría UART, parada segura y selección de los tres juegos de ganancias LQR. La programación se efectuó directamente desde PSoC Creator 4.4, que confirmó borrado, escritura, protección y verificación del checksum.
+
+La secuencia física comenzó en \texttt{MONITOR}: se obtuvieron 600 muestras con mando y códigos DAC nulos, sin banderas, con período entre 1999 y \SI{2001}{\micro s} y tiempo máximo de ISR de \SI{51}{\micro s}. Luego se aplicaron pulsos abiertos de $+\SI{50}{mV}$ y $-\SI{50}{mV}$; la cuantización produjo mandos reales de 46 y $-\SI{53}{mV}$, y extremos medidos de salida de 53 y $-\SI{55}{mV}$, respectivamente, sin fallas. Esta prueba revalidó signo, escalas y actuación bipolar antes de cerrar el lazo.
+
+Cada controlador se capturó por separado con la misma referencia. Los tres registros contienen 600 muestras consecutivas, sin banderas fatales, saturaciones ni bloqueos de anti-windup. Los tiempos máximos de ISR fueron 116, 116 y \SI{117}{\micro s}, muy por debajo de $T_s=\SI{2}{ms}$. Al finalizar se recompiló y programó nuevamente \texttt{MONITOR}, dejando ambos DAC en cero y los enclavamientos de actuación deshabilitados en el código entregado.
+
+\subsection{Medición con osciloscopio}
+Se utilizó un RIGOL DS1202Z-E por VISA/SCPI, con CH1 conectado a J5 para medir el mando y CH2 conectado a J7 para medir la salida de la planta. Las adquisiciones de 1200 muestras por canal confirmaron el cableado, el disparo y los niveles presentes en ambos puntos. Como CH2/J7 alcanzó sólo \SI{14.8}{mV}, esas trazas no permitieron reconocer con seguridad el escalón de \SI{50}{mV}; por esta razón, los CSV del instrumento se conservaron como evidencia de la medición, mientras que $t_r$, $t_s$ y $M_p$ se obtuvieron de la telemetría UART. Después de los ensayos se programó nuevamente \texttt{MONITOR} con los enclavamientos de actuación en cero.
+
+La Fig.~\ref{fig:experimental} reúne la salida y el mando adquiridos directamente por UART. En la respuesta se observa que el caso 2 alcanza primero la meseta, seguido por los casos 3 y 1, en concordancia con los tiempos de subida de la Tabla~\ref{tab:ideal}. El panel de mando muestra que el caso 2 exige el intervalo más amplio, aunque los tres permanecen dentro de los límites revalidados de $-115$ y \SI{107}{mV}. Las oscilaciones de pocos milivoltios alrededor de la referencia explican por qué no se sostiene la banda estricta de establecimiento de $\pm\SI{1}{mV}$.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.49\textwidth]{respuesta_experimental_lab9.png}\hfill
+\includegraphics[width=0.49\textwidth]{mando_experimental_lab9.png}
+\caption{Comparación experimental obtenida de 600 muestras UART por caso: salida de la planta y referencia (izquierda), y mando cuantizado aplicado por el PSoC (derecha).}
+\label{fig:experimental}
+\end{figure*}
+
+El núcleo del controlador se compiló para Cortex-M3 con \texttt{-Wall}, \texttt{-Wextra} y \texttt{-Werror}. El proyecto completo también compiló en PSoC Creator 4.4 sin advertencias y generó \texttt{Lab9.hex}, con 9560 bytes de Flash y 33889 bytes de SRAM. La comparación entre las constantes del código C y \texttt{dlqr} dio un error máximo de $4.326\times10^{-10}$. La versión entregada queda en \texttt{MONITOR}, con los cuatro enclavamientos de actuación en cero.
+
+\FloatBarrier
+
+\section{Conclusiones}
+El modelo identificado resultó controlable y observable, y el sistema aumentado presentó rango 3. Todos los polos del regulador y del estimador quedaron dentro del círculo unitario. Además, la solución iterativa de Riccati coincidió con \texttt{dlqr}, por lo que las ganancias utilizadas en el PSoC corresponden al diseño de MATLAB.
+
+Los ensayos conservaron el orden de rapidez previsto. El caso 2 fue el más rápido, con \SI{10}{ms} de subida, seguido por el caso 3 con \SI{36}{ms} y el caso 1 con \SI{78}{ms}. Frente a la simulación, estos tiempos fueron aproximadamente 17\%, 25\% y 47\% menores, respectivamente. El caso 2 también utilizó el intervalo de mando más amplio, de $-21$ a \SI{77}{mV}; los otros dos casos llegaron como máximo a \SI{61}{mV}. Ninguno alcanzó los límites de $-115$ y \SI{107}{mV}, por lo que no hubo saturación.
+
+La respuesta inicial fue rápida, pero la banda estricta del 2\% no se mantuvo en ninguno de los casos. Su semiancho es de sólo \SI{1}{mV}, menor que el efecto combinado del ruido y de los pasos de 10 a \SI{15}{mV} del DAC. Aun así, los errores medios de las últimas 50 muestras fueron 0,10, 0,08 y \SI{0.46}{mV}, y el mayor sobrepasamiento fue 16\%. El caso 2 fue el más sensible al cambio de modelo: su sobrepasamiento pasó de 1,94\% con la planta identificada a 17,15\% con la nominal. Finalmente, el peor tiempo de interrupción fue \SI{117}{\micro s}, apenas 5,9\% del período de muestreo, lo que deja margen suficiente para la ejecución en tiempo real.
+
+\begin{thebibliography}{99}
+\bibitem{enunciado}
+Universidad Católica ``Nuestra Señora de la Asunción'', ``Control óptimo con integrador en el espacio de estados'', enunciado del Laboratorio 9 de Automatización, 2026.
+
+\bibitem{ogata}
+K. Ogata, \emph{Discrete-Time Control Systems}, 2nd ed. Upper Saddle River, NJ, USA: Prentice Hall, 1995.
+
+\bibitem{franklin}
+G. F. Franklin, J. D. Powell and M. L. Workman, \emph{Digital Control of Dynamic Systems}, 3rd ed. Menlo Park, CA, USA: Addison-Wesley, 1998.
+
+\bibitem{matlab}
+MathWorks, ``Control System Toolbox Documentation: \texttt{dlqr}, \texttt{place} and discrete state-space models,'' MATLAB R2026b.
+
+\end{thebibliography}
+
+\AddToShipoutPictureFG*{%
+  \AtPageLowerLeft{%
+    \raisebox{0.20in}{\makebox[\paperwidth][r]{\footnotesize SDG\hspace*{0.25in}}}%
+  }%
+}
+
+\end{document}

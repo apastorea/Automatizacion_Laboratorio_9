@@ -1,0 +1,4 @@
+caso,muestras,t_inicio_s,t_fin_s,paso_medio_ms,ch1_min_mV,ch1_max_mV,ch1_vpp_mV,ch1_rms_mV,ch1_desv_mV,ch2_min_mV,ch2_max_mV,ch2_vpp_mV,ch2_rms_mV,ch2_desv_mV,uart_sincronizada,dinamica_evaluable,instrumento,evaluacion
+1,1200,-1.2,1.198,2,12,17.6,5.6,15.0077668780757,1.57148003916163,4,14.4,10.4,9.91102416503964,2.45793241336686,0,0,"RIGOL TECHNOLOGIES,DS1202Z-E,DS1ZE275014864,00.06.04",no evaluable dinamicamente: amplitud insuficiente en J7/CH2
+2,1200,-1.2,1.198,2,11.2,17.6,6.4,14.9132781998683,1.52337961785815,3.2,14.8,11.6,9.90251146595312,2.65354114773846,0,0,"RIGOL TECHNOLOGIES,DS1202Z-E,DS1ZE275014864,00.06.04",no evaluable dinamicamente: amplitud insuficiente en J7/CH2
+3,1200,-1.2,1.198,2,12,17.6,5.6,15.0819450558165,1.55147302816741,4.4,14,9.6,9.9684034161277,2.59129047424926,0,0,"RIGOL TECHNOLOGIES,DS1202Z-E,DS1ZE275014864,00.06.04",no evaluable dinamicamente: amplitud insuficiente en J7/CH2
