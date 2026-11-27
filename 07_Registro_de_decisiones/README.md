@@ -41,7 +41,12 @@
   **CH2/J7 = salida de planta**.
 - J7 alcanzó alrededor de 0,48 V y permitió obtener las métricas transitorias
   directamente del osciloscopio.
-- Los tiempos de subida medidos fueron 166, 16 y 58 ms para los tres casos.
+- Las métricas dinámicas se calcularon respecto del nivel final experimental,
+  separándolas del error de seguimiento contra 0,5 V.
+- Los tiempos de subida medidos fueron 146, 16 y 46 ms y los establecimientos
+  dinámicos fueron 264, 34 y 88 ms para los tres casos.
+- Ningún caso sostuvo la banda de seguimiento de ±10 mV; los errores finales
+  quedaron entre 15,8 y 20,0 mV.
 - El caso 2 exigió el mayor intervalo de mando, de -223 mV a 681 mV, sin
   alcanzar la saturación física.
 - Se generó un diagrama de bloques simplificado para documentar la arquitectura

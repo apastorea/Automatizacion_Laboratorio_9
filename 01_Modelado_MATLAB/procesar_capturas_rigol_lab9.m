@@ -2,10 +2,11 @@
 %
 % CH1 corresponde al mando fisico medido en J5 y CH2 a la salida de planta
 % medida en J7. La rutina elimina el nivel de reposo, alinea cada ensayo con
-% el comienzo del mando y calcula las mismas magnitudes usadas en el diseno:
-% tiempo de subida 10--90 %, establecimiento al 2 %, sobreimpulso, error de
-% regimen y extremos de la accion de control. Los resultados se comparan con
-% el calculo continuo/ideal y con la simulacion que incluye el DAC cuantizado.
+% el comienzo del mando y separa dos propiedades que no deben confundirse:
+% la rapidez de la dinamica se mide respecto del nivel final experimental,
+% mientras que el error de seguimiento se calcula contra la referencia de
+% 500 mV. Esta convencion coincide con la definicion usual de tiempo de
+% subida y establecimiento cuando existe error estacionario.
 
 clearvars;
 
@@ -72,20 +73,25 @@ for caso = 1:3
     regimen = tRel >= duracionReferencia_s-0.080 & ...
         tRel <= duracionReferencia_s-0.020;
 
-    % Tiempo de subida respecto de la referencia de 500 mV.
-    i10 = find(meseta & yFiltrada >= 0.10*referencia_V, 1, "first");
-    i90 = find(meseta & yFiltrada >= 0.90*referencia_V, 1, "first");
+    % El nivel final experimental se estima antes de retirar el pulso. Los
+    % cruces 10--90 % y el establecimiento dinamico se refieren a ese nivel;
+    % medirlos contra 500 mV sesgaria el resultado si existe error final.
+    yRegimen_V = mean(yFiltrada(regimen), "omitmissing");
+    i10 = find(meseta & yFiltrada >= 0.10*yRegimen_V, 1, "first");
+    i90 = find(meseta & yFiltrada >= 0.90*yRegimen_V, 1, "first");
     assert(~isempty(i10) && ~isempty(i90) && i90 >= i10, ...
         "LAB9:RIGOL:Subida", "No se pudo medir la subida del caso %d.", caso);
     tr_ms = 1e3*(t(i90)-t(i10));
 
-    % Establecimiento: primera muestra a partir de la cual la salida filtrada
-    % permanece dentro de ±2 % hasta 20 ms antes de retirar la referencia.
-    banda = 0.02*referencia_V;
+    % Establecimiento dinamico: primera muestra a partir de la cual la salida
+    % permanece dentro de +/-2 % del nivel final experimental. En paralelo se
+    % conserva una bandera independiente para la banda de seguimiento de
+    % +/-2 % alrededor de la referencia de 500 mV.
+    bandaDinamica = 0.02*abs(yRegimen_V);
     indicesMeseta = find(tRel >= 0 & tRel <= duracionReferencia_s-0.020);
-    fuera = abs(yFiltrada(indicesMeseta)-referencia_V) > banda;
+    fuera = abs(yFiltrada(indicesMeseta)-yRegimen_V) > bandaDinamica;
     ultimoFuera = find(fuera, 1, "last");
-    establecio_2pct = true;
+    establecio_dinamico_2pct = true;
     if isempty(ultimoFuera)
         ts_ms = 0;
     elseif ultimoFuera < numel(indicesMeseta)
@@ -94,25 +100,43 @@ for caso = 1:3
         % No se reemplaza por cero ni por un guion: se informa el limite
         % inferior observable y una bandera que explicita que no se alcanzo.
         ts_ms = 1e3*duracionReferencia_s;
-        establecio_2pct = false;
+        establecio_dinamico_2pct = false;
     end
 
     pico_V = max(yFiltrada(meseta), [], "omitmissing");
-    Mp_pct = max(0, 100*(pico_V-referencia_V)/referencia_V);
-    yRegimen_V = mean(yFiltrada(regimen), "omitmissing");
+    Mp_pct = max(0, 100*(pico_V-yRegimen_V)/abs(yRegimen_V));
     ess_mV = 1e3*(referencia_V-yRegimen_V);
+    bandaReferencia = 0.02*referencia_V;
+    fueraReferencia = abs(yFiltrada(indicesMeseta)-referencia_V) > ...
+        bandaReferencia;
+    ultimoFueraReferencia = find(fueraReferencia, 1, "last");
+    establecio_referencia_2pct = isempty(ultimoFueraReferencia) || ...
+        ultimoFueraReferencia < numel(indicesMeseta);
+    if establecio_referencia_2pct && ~isempty(ultimoFueraReferencia)
+        ts_seguimiento_ref_ms = ...
+            1e3*tRel(indicesMeseta(ultimoFueraReferencia+1));
+    elseif establecio_referencia_2pct
+        ts_seguimiento_ref_ms = 0;
+    else
+        ts_seguimiento_ref_ms = 1e3*duracionReferencia_s;
+    end
     ventanaMando = tRel >= 0 & tRel <= duracionReferencia_s+0.20;
-    u_min_mV = 1e3*min(uRel(ventanaMando), [], "omitmissing");
-    u_max_mV = 1e3*max(uRel(ventanaMando), [], "omitmissing");
+    % Se incluye el nivel nulo previo al escalon para que los extremos sean
+    % comparables con las simulaciones, que abarcan la secuencia completa.
+    u_min_mV = 1e3*min([0; uRel(ventanaMando)], [], "omitmissing");
+    u_max_mV = 1e3*max([0; uRel(ventanaMando)], [], "omitmissing");
     paso_medio_ms = 1e3*mean(diff(t));
 
     fila = table(caso, height(captura), paso_medio_ms, tr_ms, ts_ms, ...
-        Mp_pct, ess_mV, u_min_mV, u_max_mV, y0*1e3, ...
-        establecio_2pct, string(meta.instrumento), ...
+        Mp_pct, ess_mV, u_min_mV, u_max_mV, yRegimen_V*1e3, y0*1e3, ...
+        establecio_dinamico_2pct, ts_seguimiento_ref_ms, ...
+        establecio_referencia_2pct, string(meta.instrumento), ...
         logical(meta.disparoDetectado), ...
         VariableNames=["caso" "muestras" "paso_medio_ms" "tr_ms" ...
         "ts_ms" "Mp_pct" "ess_mV" "u_min_mV" "u_max_mV" ...
-        "offset_salida_mV" "establecio_2pct" "instrumento" ...
+        "nivel_final_mV" "offset_salida_mV" ...
+        "establecio_dinamico_2pct" "ts_seguimiento_ref_ms" ...
+        "establecio_referencia_2pct" "instrumento" ...
         "disparo_detectado"]);
     resumenRIGOL = [resumenRIGOL; fila]; %#ok<AGROW>
 
@@ -120,11 +144,12 @@ for caso = 1:3
     plot(1e3*tRel, 1e3*yRel, Color=[0.72 0.78 0.86], LineWidth=0.7); hold on;
     plot(1e3*tRel, 1e3*yFiltrada, Color=[0 0.32 0.62], LineWidth=1.7);
     yline(500, "--", Color=[0.75 0.16 0.12], LineWidth=1.2);
+    yline(1e3*yRegimen_V, ":", Color=[0.10 0.48 0.20], LineWidth=1.1);
     xline(0, ":k"); xline(1e3*duracionReferencia_s, ":k");
     xlim([-80 760]); ylim([-60 590]); grid on;
     ylabel("Salida J7 (mV)"); title("Caso "+caso+": seguimiento");
     if caso == 3, xlabel("Tiempo desde el escalon (ms)"); end
-    legend("Medida", "Media movil (7)", "Referencia", ...
+    legend("Medida", "Media movil (7)", "Referencia", "Nivel final", ...
         Location="southeast", FontSize=7);
 
     nexttile(2*caso);
@@ -146,9 +171,11 @@ close(fig);
 writetable(resumenRIGOL, fullfile(carpetaResultados, ...
     "resumen_rigol_lab9.csv"));
 
-% Tabla comparativa: "calculado" usa el modelo identificado y actuador ideal
-% limitado; "simulado" incorpora cuantizacion y asimetria de los DAC; la
-% tercera fuente procede exclusivamente de los CSV recién adquiridos.
+% Tabla comparativa: "calculado" significa respuesta numerica del modelo
+% identificado con actuador continuo ideal limitado; "simulado" incorpora
+% cuantizacion y asimetria de los DAC; "medido" procede exclusivamente de
+% los CSV recien adquiridos. tr, ts y Mp describen la dinamica respecto del
+% nivel final de cada respuesta; ess conserva la referencia comun de 500 mV.
 sim = readtable(fullfile(carpetaResultados, "resumen_simulacion_lab9.csv"), ...
     TextType="string");
 tablaComparativa = table();

@@ -45,8 +45,9 @@ Los tres CSV principales tienen 1200 muestras por canal. Sus intervalos son:
 | 2 | -223 a 681 | -40 a 500 |
 | 3 | -22 a 482 | -30 a 500 |
 
-La amplitud de J7 fue suficiente para evaluar la dinámica. Los tiempos de
-subida fueron 166, 16 y 58 ms. El sobrepasamiento medido fue nulo en los tres
-casos; estos ceros corresponden a respuestas monótonas y no a datos faltantes.
-El establecimiento se expresa como mayor que 602 ms porque persiste un error
-final entre 15,8 y 20,0 mV durante el pulso.
+La amplitud de J7 fue suficiente para evaluar la dinámica. Respecto del nivel
+final experimental, los tiempos de subida fueron 146, 16 y 46 ms; los tiempos
+de establecimiento dinámico fueron 264, 34 y 88 ms; y los sobrepasamientos,
+0,98 %, 3,48 % y 1,81 %. El seguimiento se evalúa por separado contra 0,5 V:
+ningún caso sostuvo la banda de ±10 mV y el error final quedó entre 15,8 y
+20,0 mV.

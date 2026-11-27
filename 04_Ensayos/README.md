@@ -26,9 +26,11 @@ Los intervalos principales fueron:
 | 3 | -22 a 482 | -30 a 500 |
 
 Las adquisiciones muestran con claridad los transitorios de mando y salida.
-Los tiempos de subida medidos fueron 166, 16 y 58 ms para los casos 1, 2 y 3.
-El tiempo de establecimiento se informa como mayor que 602 ms porque ninguna
-salida permaneció dentro de la banda de ±10 mV antes de retirar el pulso.
+Respecto del nivel final experimental, los tiempos de subida fueron 146, 16 y
+46 ms y los establecimientos dinámicos al 2 % fueron 264, 34 y 88 ms. En una
+comprobación separada, ninguna salida permaneció dentro de la banda de
+seguimiento de ±10 mV alrededor de 0,5 V; el error final quedó entre 15,8 y
+20,0 mV.
 
 Al finalizar se recompiló y programó `MONITOR`. Los DAC quedaron en cero y los
 cuatro enclavamientos de actuación permanecen deshabilitados.

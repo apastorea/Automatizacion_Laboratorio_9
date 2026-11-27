@@ -8,10 +8,13 @@ slprj/
 *.out
 *.fls
 *.fdb_latexmk
+render_lab9-*.png
 
 # Archivos locales y temporales de PSoC Creator
 *.aldop
 *.rpt
+*.cycdx
+*.svd
 **/codegentemp/
 **/CortexM3/
 
