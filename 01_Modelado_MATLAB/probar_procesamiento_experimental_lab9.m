@@ -10,12 +10,12 @@ k = (0:599)';
 intervalo_us = [0; repmat(2000,599,1)];
 t_us = cumsum(intervalo_us);
 r_mV = zeros(600,1);
-r_mV(33:333) = 50;
+r_mV(33:333) = 500;
 % Señal sintetica utilizada para probar el importador. No se
 % guarda en resultados ni se presenta como evidencia experimental.
 y_rel_mV = zeros(600,1);
 for indice = 34:333
-    y_rel_mV(indice) = y_rel_mV(indice-1)+0.12*(50-y_rel_mV(indice-1));
+    y_rel_mV(indice) = y_rel_mV(indice-1)+0.12*(500-y_rel_mV(indice-1));
 end
 for indice = 334:600
     y_rel_mV(indice) = 0.88*y_rel_mV(indice-1);
@@ -38,7 +38,7 @@ datos = table(k,t_us,adc_counts,adc_mV,y_cal_mV,y_rel_mV,r_mV, ...
     u_solicitada_mV,u_nominal_mV,xhat1_mV,xhat2_mV,xi_mV, ...
     innovacion_mV,dac_pos,dac_neg,cpu_us,intervalo_us,flags);
 lineas = ["# LAB9 version=PRUEBA modelo=IDENTIFICADO estimador=ACTUAL_E2 " + ...
-    "Ts_nominal_us=2000 modo=LQR caso=2 referencia_mV=50"; ...
+    "Ts_nominal_us=2000 modo=LQR caso=2 referencia_mV=500"; ...
     join(string(datos.Properties.VariableNames),","); ...
     join(string(datos.Variables),",",2)];
 writelines(lineas, rutaTemporal, Encoding="UTF-8");

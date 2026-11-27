@@ -3,22 +3,20 @@ function archivos = capturar_ensayo_rigol_lab9(caso, perfil)
 %   ARCHIVOS = CAPTURAR_ENSAYO_RIGOL_LAB9(CASO) arma el osciloscopio en
 %   disparo unico, espera que el PSoC sea programado para el caso indicado,
 %   intenta recibir 600 muestras UART y guarda las formas de onda de CH1 y
-%   CH2 aun cuando COM4 no entregue una trama nueva. El JSON de metadatos
-%   distingue explicitamente una adquisicion sincronizada de una independiente.
-%   CAPTURAR_ENSAYO_RIGOL_LAB9(CASO,"zoom") crea archivos separados con
-%   10 mV/div en ambos canales y dispara por CH2. El perfil "sensibilidad"
-%   reduce ambas escalas a 5 mV/div y el umbral a 4 mV para determinar si una
-%   sonda fisicamente colocada en 10X esta configurada como 1X en el equipo.
-%   El perfil "conexion" usa 10 mV/div, centra la ventana en +20 mV y eleva
-%   el disparo de CH1 a 25 mV para la prueba abierta. CH1 se encuentra en J5
-%   (mando) y CH2 en J7 (salida física de la planta).
+%   CH2 y exige una trama UART nueva del mismo ensayo. El JSON de metadatos
+%   conserva el puerto serie detectado y confirma el sincronismo de ambas fuentes.
+%   CAPTURAR_ENSAYO_RIGOL_LAB9(CASO,"zoom") usa 100 mV/div. El perfil
+%   "sensibilidad" usa 50 mV/div y se reserva para diagnostico. El perfil
+%   "conexion" configura la prueba abierta de 500 mV. CH1 se encuentra en J5
+%   (mando) y CH2 en J7 (salida fisica de la planta). Las puntas y los canales
+%   del instrumento se configuran en 1X, de acuerdo con el montaje vigente.
 %   Ninguno de estos perfiles sobrescribe la evidencia cuantitativa del perfil
 %   predeterminado "dinamico".
 %
 %   Conexion del montaje usada en el laboratorio:
 %     CH1: J5, mando físico aplicado a la planta.
 %     CH2: J7, salida física de la planta y(t).
-%     COM4: telemetria UART del PSoC a 115200 bit/s.
+%     Puerto COM disponible: telemetria UART del PSoC a 115200 bit/s.
 %
 %   El PSoC debe permanecer inicialmente en MONITOR. Ejecute esta funcion y,
 %   cuando aparezca el mensaje de espera, programe desde PSoC Creator el caso
@@ -67,7 +65,7 @@ for rutaTemporal = archivosTemporales
     end
 end
 
-% Primero se abre solo el osciloscopio. COM4 comparte el dispositivo USB del
+% Primero se abre solo el osciloscopio. El puerto COM comparte el dispositivo USB del
 % KitProg con el programador SWD; mantenerlo abierto durante Program impide
 % que PSoC Creator seleccione el blanco en algunas estaciones Windows.
 recursoVISA = "USB0::0x1AB1::0x0517::DS1ZE275014864::0::INSTR";
@@ -101,52 +99,44 @@ assert(contains(identificacion, "RIGOL TECHNOLOGIES,DS1202Z-E"), ...
     "LAB9:InstrumentoIncorrecto", ...
     "La interfaz VISA no corresponde al RIGOL DS1202Z-E esperado.");
 
-% El perfil dinamico esta optimizado para una respuesta positiva de 50 mV.
-% CH1, conectado a J5, usa 20 mV/div para abarcar el mando bipolar previsto.
-% CH2, conectado a J7, usa 10 mV/div y offset de +20 mV para presentar la
-% salida entre aproximadamente -20 y +60 mV. El limite de ancho de banda y
-% el modo de alta resolucion
-% reducen ruido de alta frecuencia sin promediar ejecuciones distintas.
-%
-% Su disparo se eleva de 20 a 35 mV. Este nivel permanece por debajo de la
-% meseta esperada, pero por encima de los picos espurios de 20--24 mV que
-% dispararon prematuramente las adquisiciones iniciales mientras el PSoC aun
-% estaba en MONITOR. El perfil zoom usa 10 mV/div sin offset en ambos canales
-% y dispara por CH2 a 8 mV para investigar un posible transitorio de baja
-% amplitud. El perfil sensibilidad baja a 5 mV/div y 4 mV de disparo: queda
-% por encima del fondo previo de 2.4 mV, pero permite detectar una orden de
-% 50--77 mV atenuada aproximadamente diez veces por una sonda en 10X. La base
-% de 200 ms/div cubre el pulso y su retorno en todos los perfiles.
+% El perfil dinamico esta dimensionado para una referencia de 500 mV y un
+% mando menor que 800 mV. Con 200 mV/div se observa el transitorio completo
+% sin sacrificar resolucion. Los ensayos de control se disparan desde CH1 a
+% 50 mV: esta condicion detecta tambien el caso lento, cuyo mando crece de
+% forma gradual, y permanece varias veces por encima del ruido de reposo.
+% El limite de ancho de banda y el modo de alta resolucion reducen
+% ruido de alta frecuencia sin promediar ejecuciones distintas. La base de
+% 200 ms/div cubre el pulso y su retorno.
 if perfil == "zoom"
-    escalaCH1 = 0.01;
-    escalaCH2 = 0.01;
+    escalaCH1 = 0.10;
+    escalaCH2 = 0.10;
     offsetCH1 = 0;
     offsetCH2 = 0;
     fuenteDisparo = "CHAN2";
-    nivelDisparo = 0.008;
+    nivelDisparo = 0.20;
 elseif perfil == "sensibilidad"
-    escalaCH1 = 0.005;
-    escalaCH2 = 0.005;
+    escalaCH1 = 0.05;
+    escalaCH2 = 0.05;
     offsetCH1 = 0;
     offsetCH2 = 0;
     fuenteDisparo = "CHAN2";
-    nivelDisparo = 0.004;
+    nivelDisparo = 0.10;
 elseif perfil == "conexion"
-    % En el ensayo abierto se dispara con el mando físico J5 a 25 mV. CH2
+    % En el ensayo abierto se dispara con el mando fisico J5 a 250 mV. CH2
     % registra simultáneamente la respuesta de la planta en J7.
-    escalaCH1 = 0.02;
-    escalaCH2 = 0.01;
+    escalaCH1 = 0.20;
+    escalaCH2 = 0.20;
     offsetCH1 = 0;
-    offsetCH2 = 0.02;
+    offsetCH2 = 0;
     fuenteDisparo = "CHAN1";
-    nivelDisparo = 0.025;
+    nivelDisparo = 0.25;
 else
-    escalaCH1 = 0.02;
-    escalaCH2 = 0.01;
+    escalaCH1 = 0.20;
+    escalaCH2 = 0.20;
     offsetCH1 = 0;
-    offsetCH2 = 0.02;
-    fuenteDisparo = "CHAN2";
-    nivelDisparo = 0.025;
+    offsetCH2 = 0;
+    fuenteDisparo = "CHAN1";
+    nivelDisparo = 0.05;
 end
 
 % Los perfiles de control esperan una cabecera LQR; la prueba de conexion
@@ -178,7 +168,8 @@ fprintf("RIGOL configurado para el caso %d, perfil %s. Programe ahora " + ...
     "el PSoC desde PSoC Creator.\n", caso, perfil);
 
 % La automatizacion crea PROGRAMADO solo despues de que PSoC Creator termina
-% el ciclo SWD. Recién entonces se abre COM4, dentro de la espera de 3 s que
+% el ciclo SWD. Recién entonces se abre el puerto serie disponible, dentro de
+% la espera de 3 s que
 % el firmware deja antes del escalon, evitando toda contencion con KitProg.
 relojProgramador = tic;
 while ~isfile(rutaProgramado) && toc(relojProgramador) < 120
@@ -192,7 +183,14 @@ delete(rutaProgramado);
 % dispararse por el ruido producido durante el ciclo SWD y queda armado dentro
 % de la espera de seguridad de 3 s anterior al escalon del firmware.
 escribirScpi(osciloscopio, ":SING");
-puerto = serialport("COM4", 115200, "Timeout", 2);
+puertosDisponibles = string(serialportlist("available"));
+assert(~isempty(puertosDisponibles), "LAB9:PuertoSerieAusente", ...
+    "No se detecto el puerto serie del KitProg despues de programar.");
+assert(numel(puertosDisponibles) == 1, "LAB9:PuertoSerieAmbiguo", ...
+    "Se detectaron varios puertos serie (%s); desconecte interfaces ajenas.", ...
+    strjoin(puertosDisponibles, ", "));
+nombrePuerto = puertosDisponibles(1);
+puerto = serialport(nombrePuerto, 115200, "Timeout", 2);
 configureTerminator(puerto, "LF");
 flush(puerto);
 
@@ -232,17 +230,14 @@ uartSincronizada = capturaCorrecta && filasDatos == 600;
 if uartSincronizada
     writelines(lineas, rutaUART, Encoding="UTF-8");
 else
-    % El osciloscopio es una medicion fisica independiente. Si el puente
-    % KitProg-UART no entrega datos, no se descarta la forma de onda: se usa
-    % como respaldo la captura UART experimental ya validada para este caso
-    % y se registra la falta de sincronismo en los metadatos JSON.
-    rutaUARTRespaldo = fullfile(carpetaCapturas, "caso_"+caso+"_uart.csv");
-    assert(isfile(rutaUARTRespaldo), "LAB9:UARTRespaldoAusente", ...
-        "No existe una captura UART experimental valida del caso %d.", caso);
-    rutaUART = rutaUARTRespaldo;
+    % La ausencia del puente serie no invalida la medicion independiente del
+    % osciloscopio. No se reutilizan capturas anteriores: el campo archivoUART
+    % queda vacio y la evaluacion experimental se realiza exclusivamente con
+    % CH1 y CH2 del ensayo que acaba de ejecutarse.
     warning("LAB9:UARTNoSincronizada", ...
-        "COM4 no entrego 600 filas; se conserva la captura RIGOL y se " + ...
-        "referencia la UART experimental validada del caso %d.", caso);
+        "%s no entrego una trama nueva; se conservara solo la captura RIGOL.", ...
+        nombrePuerto);
+    rutaUART = "";
 end
 if isfile(rutaArmado)
     delete(rutaArmado);
@@ -274,15 +269,27 @@ capturaScope = table(tiempo1_s, canal1_V, canal2_V, ...
     VariableNames=["t_s", "ch1_mando_V", "ch2_salida_V"]);
 writetable(capturaScope, rutaScope);
 
-% La imagen nativa del RIGOL constituye evidencia visual independiente del
-% CSV. Se solicita en PNG color sin inversion mediante un bloque binario TMC.
-imagen = consultarBloqueBinario(osciloscopio, ":DISP:DATA? ON,OFF,PNG");
-identificador = fopen(rutaPantalla, "w");
-assert(identificador >= 0, "LAB9:ArchivoPantalla", ...
-    "No se pudo crear el archivo PNG del RIGOL.");
-limpiezaArchivo = onCleanup(@() fclose(identificador));
-fwrite(identificador, imagen, "uint8");
-clear limpiezaArchivo
+% La imagen nativa es evidencia complementaria; los 1200 puntos de cada
+% canal constituyen la medicion cuantitativa. Algunos firmwares del DS1202Z-E
+% agotan el tiempo al transferir PNG despues del volcado binario, por lo que
+% esta operacion no invalida ni elimina el CSV ya adquirido.
+imagenDisponible = false;
+try
+    osciloscopio.TimeoutMilliseconds = 30000;
+    imagen = consultarBloqueBinario(osciloscopio, ":DISP:DATA? ON,OFF,PNG");
+    identificador = fopen(rutaPantalla, "w");
+    assert(identificador >= 0, "LAB9:ArchivoPantalla", ...
+        "No se pudo crear el archivo PNG del RIGOL.");
+    limpiezaArchivo = onCleanup(@() fclose(identificador));
+    fwrite(identificador, imagen, "uint8");
+    clear limpiezaArchivo
+    imagenDisponible = true;
+catch errorPantalla
+    warning("LAB9:PantallaRigolNoDisponible", ...
+        "CSV guardado; la pantalla nativa no se transfirio: %s", ...
+        errorPantalla.message);
+    rutaPantalla = "";
+end
 
 % Los metadatos permiten reconstruir la conversion de cuentas a voltios y
 % vinculan cada archivo con el numero de serie fisico del osciloscopio.
@@ -291,6 +298,7 @@ metadatos = struct("caso", caso, "perfil", perfil, ...
     "instrumento", identificacion, ...
     "recursoVISA", recursoVISA, "canal1", "J5: mando fisico", ...
     "canal2", "J7: salida fisica de planta", ...
+    "puertoSerie", nombrePuerto, ...
     "preambuloCH1", preambulo1, ...
     "preambuloCH2", preambulo2, "muestrasUART", filasDatos, ...
     "uartSincronizada", uartSincronizada, "archivoUART", rutaUART, ...
@@ -298,7 +306,8 @@ metadatos = struct("caso", caso, "perfil", perfil, ...
     "escalaCH2_Vdiv", escalaCH2, "offsetCH1_V", offsetCH1, ...
     "offsetCH2_V", offsetCH2, ...
     "fuenteDisparo", fuenteDisparo, "nivelDisparo_V", nivelDisparo, ...
-    "estadoDisparo", estadoDisparo, "disparoDetectado", disparoDetectado);
+    "estadoDisparo", estadoDisparo, "disparoDetectado", disparoDetectado, ...
+    "imagenDisponible", imagenDisponible);
 writelines(jsonencode(metadatos, PrettyPrint=true), rutaMetadatos, ...
     Encoding="UTF-8");
 

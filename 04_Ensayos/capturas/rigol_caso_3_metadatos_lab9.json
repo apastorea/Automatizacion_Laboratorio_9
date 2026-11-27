@@ -6,6 +6,7 @@
   "recursoVISA": "USB0::0x1AB1::0x0517::DS1ZE275014864::0::INSTR",
   "canal1": "J5: mando fisico",
   "canal2": "J7: salida fisica de planta",
+  "puertoSerie": "COM9",
   "preambuloCH1": [
     0,
     0,
@@ -14,7 +15,7 @@
     0.002,
     -1.2,
     0,
-    0.0008,
+    0.008,
     0,
     127
   ],
@@ -26,20 +27,21 @@
     0.002,
     -1.2,
     0,
-    0.0004,
-    50,
+    0.008,
+    0,
     127
   ],
   "muestrasUART": 0,
   "uartSincronizada": false,
-  "archivoUART": "C:\\Users\\aldop\\OneDrive\\Documentos\\UCA\\2026\\2do Semestre\\Automatizacion\\Laboratorio 9\\01_Modelado_MATLAB\\..\\04_Ensayos\\capturas\\caso_3_uart.csv",
+  "archivoUART": "",
   "muestrasScope": 1200,
-  "escalaCH1_Vdiv": 0.02,
-  "escalaCH2_Vdiv": 0.01,
+  "escalaCH1_Vdiv": 0.2,
+  "escalaCH2_Vdiv": 0.2,
   "offsetCH1_V": 0,
-  "offsetCH2_V": 0.02,
-  "fuenteDisparo": "CHAN2",
-  "nivelDisparo_V": 0.025,
+  "offsetCH2_V": 0,
+  "fuenteDisparo": "CHAN1",
+  "nivelDisparo_V": 0.05,
   "estadoDisparo": "STOP",
-  "disparoDetectado": true
+  "disparoDetectado": true,
+  "imagenDisponible": true
 }

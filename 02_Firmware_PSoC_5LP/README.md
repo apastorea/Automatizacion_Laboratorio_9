@@ -16,7 +16,7 @@ generado con el modelo identificado.
 Antes de programar el dispositivo se debe:
 
 1. ejecutar el diseño MATLAB y congelar las ganancias verificadas;
-2. repetir `MONITOR` y la comprobación bipolar de ±50 mV;
+2. repetir `MONITOR` y la comprobación de escala con 0,5 V;
 3. verificar que los límites y escalas del DAC siguen vigentes;
 4. ensayar un único caso por compilación/captura;
 5. volver a `MONITOR` entre casos y al finalizar.
@@ -32,7 +32,7 @@ Antes de programar el dispositivo se debe:
 
 El núcleo portable compiló con `-Wall -Wextra -Werror`. El workspace completo
 también compiló en configuración Release con GCC ARM 5.4.1 de PSoC Creator 4.4,
-sin advertencias: 9560 bytes de Flash y 33889 bytes de SRAM. El script
+sin advertencias: 9616 bytes de Flash y 33889 bytes de SRAM. El script
 `01_Modelado_MATLAB/verificar_firmware_lab9.m` confirmó que las ganancias C
 coinciden con `dlqr` con error máximo de `4.326e-10`, que las fuentes están
 sincronizadas y que el archivo `Lab9.hex` está presente.

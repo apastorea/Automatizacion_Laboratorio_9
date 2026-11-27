@@ -27,16 +27,19 @@ t = (0:N-1)'*Ts;
 iInicio = 33;
 iFin = 333;
 r = zeros(N, 1);
-r(iInicio:iFin) = 0.050;
+r(iInicio:iFin) = 0.500;
 
 polosObservador = [0.20+0.10i, 0.20-0.10i];
 
-limites.uMin = -0.115;
-limites.uMax = 0.107;
+% La etapa de potencia fue validada en el intervalo fisico de +/-1 V. Para
+% seleccionar la referencia se exige, ademas, que el mando solicitado no
+% supere el 80 % de ese rango; la saturacion absoluta queda como proteccion.
+limites.uMin = -1.000;
+limites.uMax = 1.000;
 limites.qPos = 0.015370448;
 limites.qNeg = 0.010560423;
-limites.codigoPosMax = 7;
-limites.codigoNegMax = 11;
+limites.codigoPosMax = 65;
+limites.codigoNegMax = 94;
 limites.antiwindup = true;
 
 casos(1).nombre = "caso_1";

@@ -78,9 +78,9 @@ KoptimaLab9 = dlqr(AumentadaLab9, BumentadaLab9, ...
 KxLab9 = KoptimaLab9(1:2);
 KiLab9 = KoptimaLab9(3);
 
-uMinLab9 = -0.115;
-uMaxLab9 = 0.107;
-referenciaLab9 = 0.050;
+uMinLab9 = -1.000;
+uMaxLab9 = 1.000;
+referenciaLab9 = 0.500;
 inicioReferenciaLab9 = 0.064;
 finReferenciaLab9 = 0.666;
 tiempoFinalLab9 = 1.198;

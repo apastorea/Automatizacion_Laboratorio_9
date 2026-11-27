@@ -54,26 +54,27 @@
 #define LAB9_PRETRIGGER              (32u)  /* 64 ms para estimar el cero. */
 #define LAB9_FIN_REFERENCIA          (333u)
 #define LAB9_FIN_ESCALON_ABIERTO     (128u)
-#define LAB9_INICIO_MS               (3000u) /* Ventana para observar salidas seguras. */
-#define LAB9_REFERENCIA_V            (0.050f)
-#define LAB9_ESCALON_ABIERTO_MV      (50)
+#define LAB9_INICIO_MS               (8000u) /* Da tiempo a armar RIGOL y abrir UART tras SWD. */
+#define LAB9_REFERENCIA_V            (0.500f)
+#define LAB9_ESCALON_ABIERTO_MV      (500)
 #define LAB9_ESCALON_ABIERTO_V       ((float)LAB9_ESCALON_ABIERTO_MV/1000.0f)
 
 #if LAB9_ESCALON_ABIERTO_MV == 0 || \
-    LAB9_ESCALON_ABIERTO_MV > 50 || LAB9_ESCALON_ABIERTO_MV < -50
-#error El escalon abierto debe estar entre -50 mV y +50 mV y ser no nulo.
+    LAB9_ESCALON_ABIERTO_MV > 500 || LAB9_ESCALON_ABIERTO_MV < -500
+#error El escalon abierto debe estar entre -500 mV y +500 mV y ser no nulo.
 #endif
 
 #if LAB9_FIN_ESCALON_ABIERTO <= LAB9_PRETRIGGER
 #error La ventana del escalon abierto es invalida.
 #endif
 
-/* Limites del mando definidos a partir del rango util validado. Son mas
- * restrictivos que el limite fisico absoluto y se usan dentro del LQR. */
-#define LAB9_U_MIN_V                 (-0.115f)
-#define LAB9_U_MAX_V                 (0.107f)
-#define LAB9_U_LIMITE_FISICO_V       (0.120f)
-#define LAB9_Y_FALLO_V               (0.500f)
+/* Limites absolutos de la etapa de actuacion. La referencia se selecciona
+ * por simulacion para mantener |u|<=0.8 V en operacion nominal, dejando el
+ * 20 % restante para incertidumbre y perturbaciones. */
+#define LAB9_U_MIN_V                 (-1.000f)
+#define LAB9_U_MAX_V                 (1.000f)
+#define LAB9_U_LIMITE_FISICO_V       (1.000f)
+#define LAB9_Y_FALLO_V               (1.500f)
 
 /* Calibracion del canal de medida: y=(V_ADC-offset)/ganancia. La salida
  * bipolar usa dos DAC unipolares y reconstruye u=Gp*Vp-Gn*Vn. */
@@ -82,6 +83,8 @@
 #define LAB9_DAC_GANANCIA_POS         (3.842612000f)
 #define LAB9_DAC_GANANCIA_NEG         (2.640105691f)
 #define LAB9_DAC_V_POR_CUENTA         (0.004f)
+#define LAB9_DAC_CODIGO_POS_MAX       (65u)
+#define LAB9_DAC_CODIGO_NEG_MAX       (94u)
 #define LAB9_SALIDA_FISICA_MAX_V      (1.0f)
 #define LAB9_SALIDA_FISICA_MIN_V      (-1.0f)
 

@@ -7,7 +7,7 @@ Antes del cierre de lazo se debe repetir la comprobación mínima del montaje:
 - período real de 2 ms y margen de tiempo de ISR;
 - cero y escala del ADC;
 - signo y escala del DAC en ambas ramas;
-- respuesta abierta a +50 mV y -50 mV;
+- respuesta abierta al pulso de 0,5 V y comprobación de polaridad;
 - ausencia de banderas de falla.
 
 Si cambia la planta, la etapa de acondicionamiento o la escala del DAC, deben

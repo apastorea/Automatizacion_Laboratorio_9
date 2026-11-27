@@ -4,22 +4,14 @@ Cada controlador se ensayó por separado mediante la misma secuencia segura:
 
 1. programar `MONITOR` y confirmar mando y DAC nulos;
 2. seleccionar un caso LQR y habilitar conscientemente el lazo;
-3. aplicar el pulso de referencia de 50 mV;
-4. capturar la telemetría UART y ambos canales del RIGOL;
+3. aplicar el pulso de referencia de 0,5 V;
+4. capturar simultáneamente ambos canales del RIGOL;
 5. registrar firmware, ganancias, período, límites y metadatos;
 6. regresar a `MONITOR` antes del siguiente caso.
 
 Para cada caso se calcularon tiempo de subida 10–90 %, establecimiento al 2 %,
-establecimiento robusto frente a ruido, sobrepasamiento, error estacionario,
-RMS, mando mínimo y máximo, saturaciones, anti-windup, fallas, período y peor
-tiempo de ISR. Los resultados simulados nunca sustituyen datos experimentales.
-
-## Capturas UART
-
-Los tres casos cuentan con 600 muestras válidas. El importador
-`01_Modelado_MATLAB/actualizar_resultados_experimentales_lab9.m` verifica los
-metadatos y genera las métricas, figuras y la tabla
-calculado–simulado–experimental.
+sobrepasamiento, error estacionario y extremos del mando. Los resultados
+simulados nunca sustituyen datos experimentales.
 
 ## Capturas RIGOL
 
@@ -29,15 +21,14 @@ Los intervalos principales fueron:
 
 | Caso | CH1/J5 mando [mV] | CH2/J7 salida [mV] |
 |---:|---:|---:|
-| 1 | 12.0 a 17.6 | 4.0 a 14.4 |
-| 2 | 11.2 a 17.6 | 3.2 a 14.8 |
-| 3 | 12.0 a 17.6 | 4.4 a 14.0 |
+| 1 | 16 a 480 | -32 a 496 |
+| 2 | -223 a 681 | -40 a 500 |
+| 3 | -22 a 482 | -30 a 500 |
 
-El RIGOL aporta amplitud, valor eficaz, dispersión y trazabilidad instrumental.
-Como J7 no presentó una meseta de 50 mV, estas adquisiciones no se emplean
-para calcular métricas transitorias; esas métricas proceden de UART. Los
-metadatos indican `uartSincronizada=false`, de modo que ambas fuentes se
-mantienen separadas.
+Las adquisiciones muestran con claridad los transitorios de mando y salida.
+Los tiempos de subida medidos fueron 166, 16 y 58 ms para los casos 1, 2 y 3.
+El tiempo de establecimiento se informa como mayor que 602 ms porque ninguna
+salida permaneció dentro de la banda de ±10 mV antes de retirar el pulso.
 
 Al finalizar se recompiló y programó `MONITOR`. Los DAC quedaron en cero y los
 cuatro enclavamientos de actuación permanecen deshabilitados.

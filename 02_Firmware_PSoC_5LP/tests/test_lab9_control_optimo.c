@@ -23,7 +23,7 @@ static void ejecutar_caso(lab9_caso_t caso)
     lab9_reiniciar(&e, 0.0f, 0.0f);
 
     for (k = 0; k < 600; ++k) {
-        referencia = (k >= 32 && k <= 332) ? 0.050f : 0.0f;
+        referencia = (k >= 32 && k <= 332) ? 0.500f : 0.0f;
         y = p.C[0]*x[0]+p.C[1]*x[1];
         u = lab9_calcular_paso(&p, &e, referencia, y);
 
@@ -41,8 +41,8 @@ static void ejecutar_caso(lab9_caso_t caso)
         x[1] = x1_nuevo;
     }
 
-    assert(pico > 0.049f);
-    assert(pico < 0.060f);
+    assert(pico > 0.490f);
+    assert(pico < 0.600f);
     assert(e.saturaciones == 0u);
     assert(e.antiwindup_bloqueos == 0u);
     assert(fabsf(x[1]) < 1.0e-4f);

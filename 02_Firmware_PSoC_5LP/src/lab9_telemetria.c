@@ -46,8 +46,8 @@ void lab9_volcar_uart(lab9_muestra_t *memoria, uint16 cantidad)
     UART_Debug_PutString("LQR");
 #endif
     (void)snprintf(linea, sizeof linea,
-        " caso=%u referencia_mV=50 DAC_cuantizado=SI antiwindup=CONDICIONAL\r\n",
-        (unsigned)LAB9_CASO);
+        " caso=%u referencia_mV=%ld DAC_cuantizado=SI antiwindup=CONDICIONAL\r\n",
+        (unsigned)LAB9_CASO, (long)lab9_convertir_mV(LAB9_REFERENCIA_V));
     UART_Debug_PutString(linea);
     (void)snprintf(linea, sizeof linea,
         "# LAB9 escalon_abierto_mV=%d inicio_k=%u fin_k=%u duracion_ms=%lu\r\n",

@@ -11,15 +11,12 @@ figuras y el informe. Ya no existe un nodo pendiente de identificar.
 ## Resultado instrumental
 
 Para cada controlador se adquirieron 1200 muestras por canal con un paso de
-2 ms. En los tres ensayos principales, CH1/J5 quedó entre 11.2 y 17.6 mV y
-CH2/J7 entre 3.2 y 14.8 mV. La amplitud observada en J7 no permitió reconocer
-una meseta de 50 mV ni calcular de forma confiable tiempos de subida,
-establecimiento o sobrepasamiento desde el osciloscopio.
-
-Por esa razón, el RIGOL se usa como verificación independiente de conexión,
-amplitud, nivel eficaz y ruido. Las métricas dinámicas experimentales proceden
-de las capturas UART validadas de 600 muestras por controlador. No se mezclan
-ni sincronizan artificialmente ambas fuentes.
+2 ms y una referencia de 0,5 V. J7 alcanzó aproximadamente 0,48 V en los tres
+casos, por lo que los flancos y las mesetas quedaron claramente visibles. Las
+métricas dinámicas experimentales se calculan directamente desde estos CSV.
+La media móvil de siete muestras se utiliza sólo para evitar que una muestra
+aislada modifique los cruces de umbral; la señal cruda se conserva en las
+figuras y archivos originales.
 
 ## Estado final seguro
 
@@ -29,5 +26,5 @@ permanecen deshabilitados en la configuración entregada.
 
 Para futuras mediciones debe conservarse una masa común segura y verificarse
 que la configuración declarada en el instrumento coincida con la sonda física.
-Las capturas diagnósticas crudas se conservan únicamente como trazabilidad y
-no forman parte de la comparación de desempeño.
+Las capturas crudas forman parte de la trazabilidad y de la comparación de
+desempeño presentada en el informe.

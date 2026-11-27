@@ -36,8 +36,8 @@ int lab9_cargar_parametros(lab9_caso_t caso, lab9_parametros_t *p)
      * de calcular u[k]; sus polos 0.20 +/- j0.10 dan convergencia rapida. */
     p->L[0] = -1.860494424f;
     p->L[1] = 0.175152235f;
-    p->u_min_V = -0.115f;
-    p->u_max_V = 0.107f;
+    p->u_min_V = -1.000f;
+    p->u_max_V = 1.000f;
 
     /* Cada caso conserva el mismo modelo y estimador; solo cambia el costo
      * LQR y, por tanto, las ganancias de estado Kx y de integracion Ki. */

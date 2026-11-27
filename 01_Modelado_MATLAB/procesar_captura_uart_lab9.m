@@ -66,8 +66,8 @@ meseta = inicio:fin;
 referencia_mV = median(datos.r_mV(meseta), "omitmissing");
 base_mV = mean(datos.y_rel_mV(pretrigger), "omitmissing");
 amplitud_mV = referencia_mV-base_mV;
-assert(abs(referencia_mV-50) <= 1, ...
-    "La referencia experimental debe ser 50 mV +/- 1 mV.");
+assert(abs(referencia_mV-500) <= 2, ...
+    "La referencia experimental debe ser 500 mV +/- 2 mV.");
 assert(abs(amplitud_mV) > 1, "La amplitud de referencia no es valida.");
 
 % Tiempo de subida 10--90 %, asentamiento al 2 %, sobreimpulso y error de

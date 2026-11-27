@@ -17,11 +17,11 @@ float lab9_limitar_hardware(float valor, float inferior, float superior)
            ((valor < inferior) ? inferior : valor);
 }
 
-static uint8 lab9_codigo_dac(float dac_V)
+static uint8 lab9_codigo_dac(float dac_V, uint8 codigo_maximo)
 {
     /* Cuantizacion al entero mas cercano y saturacion al rango de 8 bits. */
     const float codigo = lab9_limitar_hardware(
-        dac_V/LAB9_DAC_V_POR_CUENTA, 0.0f, 255.0f);
+        dac_V/LAB9_DAC_V_POR_CUENTA, 0.0f, (float)codigo_maximo);
     return (uint8)(codigo+0.5f);
 }
 
@@ -81,9 +81,11 @@ float lab9_hardware_escribir_salida(float solicitada_V, uint8 *dac_pos,
      * ganancias diferentes compensan la asimetria medida de ambas ramas. */
     *saturada = (uint8)(limitada != solicitada_V);
     if (limitada >= 0.0f)
-        positiva = lab9_codigo_dac(limitada/LAB9_DAC_GANANCIA_POS);
+        positiva = lab9_codigo_dac(limitada/LAB9_DAC_GANANCIA_POS,
+                                   LAB9_DAC_CODIGO_POS_MAX);
     else
-        negativa = lab9_codigo_dac(-limitada/LAB9_DAC_GANANCIA_NEG);
+        negativa = lab9_codigo_dac(-limitada/LAB9_DAC_GANANCIA_NEG,
+                                   LAB9_DAC_CODIGO_NEG_MAX);
 
     DAC_P_SetValue(positiva);
     DAC_N_SetValue(negativa);

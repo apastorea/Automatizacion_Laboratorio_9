@@ -14,8 +14,9 @@ partir de los componentes se conserva únicamente como caso de incertidumbre.
 - Estado integral: `xi[k+1] = xi[k] + r[k] - y[k]`.
 - Ley de control: `u[k] = -Kx*xhat[k] - Ki*xi[k]`.
 - Estimador: actual, diseñado con el mismo modelo identificado.
-- Referencia inicial de simulación y banco: pulso de `50 mV`, compatible con
-  los límites revalidados del montaje.
+- Referencia de simulación y banco: pulso de `0,5 V`, seleccionado mediante un
+  barrido de amplitud entre 0,25 V y 1 V. El criterio exige ausencia de
+  saturación y un mando máximo de 0,8 V para conservar margen físico.
 
 ## Ponderaciones solicitadas
 
@@ -42,8 +43,9 @@ Desde MATLAB, con `01_Modelado_MATLAB` como carpeta activa:
 
 ```matlab
 diseno_control_optimo_lab9
-generar_tabla_comparativa_lab9
-actualizar_resultados_experimentales_lab9
+seleccionar_referencia_lab9
+procesar_capturas_rigol_lab9
+generar_diagrama_bloques_lab9
 verificar_simulink_lab9
 verificar_estructura_simulink_lab9
 verificar_firmware_lab9
@@ -55,17 +57,15 @@ identificada y nominal, tanto con actuador ideal limitado como con el DAC
 cuantizado del montaje.
 
 La tabla consolidada se guarda en
-`05_Resultados/tabla_calculado_simulado_experimental_lab9.csv` y contiene los
-valores calculados, simulados y medidos para los tres casos. Las capturas UART
-se conservan en `04_Ensayos/capturas/`; el actualizador valida sus metadatos,
-integridad temporal y banderas antes de incorporar las métricas.
+`05_Resultados/tabla_calculado_simulado_medido_lab9.csv` y contiene los valores
+calculados, simulados y medidos para los tres casos. Las métricas físicas se
+obtienen directamente de los CSV de dos canales adquiridos con el RIGOL.
 
 ## Estado actual
 
-La etapa de diseño MATLAB/Simulink, el firmware y las mediciones quedan
-generadas por los scripts. El diagrama compiló con 38 bloques, 76 líneas y cero conexiones
-abiertas. El workspace `PSoC_Creator_Lab9/Lab9.cywrk` genera `Lab9.hex` con GCC
-ARM sin advertencias. Se revalidaron MONITOR y los pulsos abiertos de
-`+/-50 mV`, y se capturaron los tres controladores LQR sin banderas ni
-saturación. La placa quedó finalmente programada en `MONITOR`, con los
-enclavamientos en cero y ambos DAC en cero.
+La etapa de diseño, el firmware y la medición física están completos. Se
+revalidó la cadena con un pulso abierto de 0,5 V y se capturaron los tres
+controladores con 1200 muestras por canal. Las respuestas de J7 alcanzaron
+aproximadamente 0,48 V y el caso 2 fue el más rápido. El proyecto PSoC Creator
+compiló sin advertencias y la placa quedó finalmente programada en `MONITOR`,
+con los enclavamientos de actuación y ambos DAC en cero.
