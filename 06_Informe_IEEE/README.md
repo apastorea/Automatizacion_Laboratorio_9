@@ -9,8 +9,8 @@ comparativa de valores calculados, simulados y medidos experimentalmente.
 Para compilar:
 
 ```text
-pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v1 main.tex
-pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v1 main.tex
+pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v2 main.tex
+pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v2 main.tex
 ```
 
 Las figuras se generan mediante los scripts de `01_Modelado_MATLAB`. El informe
