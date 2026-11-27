@@ -29,7 +29,7 @@ Asunción, Paraguay\\
 \maketitle
 
 \begin{abstract}
-Se diseñaron e implementaron tres reguladores LQR digitales con acción integral para una planta analógica de segundo orden. El controlador y el estimador se obtuvieron directamente del modelo identificado, con un período de muestreo de \SI{2}{ms}. Antes de ensayar el lazo se evaluaron referencias entre 0,25 y \SI{1}{V}; se seleccionó \SI{0.5}{V} porque utiliza una fracción apreciable del rango de la planta y mantiene el mando solicitado por debajo de \SI{0.8}{V}. Las respuestas se capturaron físicamente con un osciloscopio RIGOL, midiendo en forma simultánea el mando en J5 y la salida en J7. Los tiempos de subida medidos fueron 146, 16 y \SI{46}{ms} para los casos 1, 2 y 3. El caso 2 resultó el más rápido y demandó el intervalo de mando más amplio, de $-223$ a \SI{681}{mV}. Los tres controladores siguieron la referencia sin saturar; el error final quedó entre 15,8 y \SI{20.0}{mV}. El proyecto se compiló y programó desde PSoC Creator 4.4 y, al finalizar, la placa quedó nuevamente en modo seguro \texttt{MONITOR}.
+Se diseñaron e implementaron tres reguladores LQR digitales con acción integral para una planta analógica de segundo orden. El controlador y el estimador se obtuvieron directamente del modelo identificado, con un período de muestreo de \SI{2}{ms}. Antes de ensayar el lazo se evaluaron referencias entre 0,25 y \SI{1}{V}; se seleccionó \SI{0.5}{V} porque utiliza una fracción apreciable del rango de la planta y mantiene el mando solicitado por debajo de \SI{0.8}{V}. Las respuestas se capturaron físicamente con un osciloscopio RIGOL, midiendo en forma simultánea el mando en J5 y la salida en J7. Los tiempos de subida medidos fueron 146, 16 y \SI{46}{ms} para los casos 1, 2 y 3. El caso 2 resultó el más rápido y demandó el intervalo de mando más amplio, de $-223$ a \SI{681}{mV}. Ningún controlador alcanzó el límite de actuación, aunque el error final medido quedó entre 15,8 y \SI{20.0}{mV}. El proyecto se compiló y programó desde PSoC Creator 4.4 y, al finalizar, la placa quedó nuevamente en modo seguro \texttt{MONITOR}.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -37,7 +37,7 @@ acción integral, control digital, estimador de estados, LQR, modelo identificad
 \end{IEEEkeywords}
 
 \section{Introducción}
-La realimentación de estados permite fijar una dinámica estable, pero no establece por sí sola un compromiso entre rapidez y esfuerzo de control. El regulador cuadrático lineal incorpora ese compromiso mediante un índice de costo. Al ampliar el sistema con la integral del error, también se obtiene seguimiento de referencias constantes frente a pequeñas diferencias de ganancia.
+La realimentación de estados permite fijar una dinámica estable, pero no establece por sí sola un compromiso entre rapidez y esfuerzo de control. El regulador cuadrático lineal incorpora ese compromiso mediante un índice de costo. Al ampliar el sistema con la integral del error, también se obtiene seguimiento de referencias constantes frente a pequeñas diferencias de ganancia \cite{ogata,franklin}.
 
 El objetivo fue comparar tres ponderaciones LQR, implementar un estimador actual y verificar el funcionamiento completo sobre la planta. El diseño se realizó con el modelo identificado, ya que es la representación que describe mejor el montaje. El modelo calculado a partir de los componentes se conservó únicamente para examinar sensibilidad.
 
@@ -72,6 +72,7 @@ u[k]=-K_x\hat{x}[k]-K_i\xi[k].
 \label{tab:ganancias}
 \centering
 \scriptsize
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{cccccc}
 \toprule
 Caso & $\operatorname{diag}(Q_1)$ & $Q_2$ & $K_x$ & $K_i$ & $\rho(A_{cl})$\\
@@ -97,7 +98,7 @@ Para polos del estimador en $0.20\pm j0.10$ se obtuvo
 \begin{equation}
 L=\begin{bmatrix}-1.860494424&0.175152235\end{bmatrix}^{T}.
 \end{equation}
-De esta forma, la innovación es exactamente la diferencia entre la medición y la salida reconstruida desde los estados estimados.
+Así, $\nu[k]$ representa la diferencia entre la medición y la salida reconstruida a partir de los estados estimados.
 
 \begin{figure*}[!t]
 \centering
@@ -109,7 +110,7 @@ De esta forma, la innovación es exactamente la diferencia entre la medición y 
 El firmware ejecuta adquisición, corrección del estimador, cálculo del control, saturación y actualización del predictor dentro de una interrupción periódica. El mando se limita a $\pm\SI{1}{V}$ y se convierte mediante dos DAC unipolares. También se incorporaron anti-windup, comprobaciones de rango, parada segura y enclavamientos de compilación. El código entregado queda en \texttt{MONITOR}, con ambos DAC en cero y las autorizaciones de actuación deshabilitadas.
 
 \section{Selección de la referencia}
-La amplitud no se escogió de manera arbitraria. Se simularon 0,25, 0,50, 0,75 y \SI{1.00}{V} con los tres controladores y el modelo identificado. Se exigió ausencia de saturación y $|u|_{\max}\leq\SI{0.8}{V}$, dejando un margen de \SI{0.2}{V} respecto del límite físico.
+Para fijar la amplitud del ensayo se simularon 0,25, 0,50, 0,75 y \SI{1.00}{V} con los tres controladores y el modelo identificado. Se exigió ausencia de saturación y $|u|_{\max}\leq\SI{0.8}{V}$, dejando un margen de \SI{0.2}{V} respecto del límite físico.
 
 \begin{table}[!t]
 \caption{Barrido previo de amplitud}
@@ -128,7 +129,7 @@ $r$ [V] & peor $|u|$ [V] & saturaciones & criterio\\
 \end{tabular}
 \end{table}
 
-La referencia de \SI{0.5}{V} ocupa un rango claramente visible tanto en la planta como en el osciloscopio y conserva margen para incertidumbres y perturbaciones.
+La referencia de \SI{0.5}{V} fue la mayor que cumplió el criterio para los tres diseños. En el osciloscopio corresponde a unas 2,5 divisiones con la escala de \SI{0.2}{V/div} utilizada en el ensayo, y todavía conserva margen para incertidumbres y perturbaciones.
 
 \begin{figure}[!t]
 \centering
@@ -142,6 +143,12 @@ Se simularon el actuador ideal limitado y el actuador con escalas reales de DAC.
 
 En la planta identificada con DAC cuantizado, los tiempos de subida fueron 148, 12 y \SI{48}{ms}; los tiempos de establecimiento al 2\,\% fueron 248, 18 y \SI{90}{ms}. El mayor sobreimpulso simulado fue 1,84\,\% en el caso 2. Los extremos de mando fueron \SIrange{0}{507}{mV}, \SIrange{-190}{692}{mV} y \SIrange{0}{507}{mV}.
 
+Como verificación independiente, el modelo equivalente en Simulink reprodujo los extremos de mando calculados en MATLAB con diferencias menores que \SI{1}{\micro V}.
+
+\noindent\begin{minipage}{\columnwidth}
+Al aplicar las ganancias a la planta nominal, los tres lazos permanecieron estables, pero el caso 2 elevó su sobreimpulso a 17,17\,\%. La diferencia muestra que este ajuste es el más sensible a las variaciones del modelo; por ese motivo, el modelo nominal se utilizó sólo como comprobación complementaria.
+\end{minipage}
+
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{comparacion_lqr_identificada.png}
@@ -149,17 +156,15 @@ En la planta identificada con DAC cuantizado, los tiempos de subida fueron 148, 
 \label{fig:simulacion}
 \end{figure}
 
-Al aplicar las ganancias a la planta nominal, los tres lazos permanecieron estables, pero el caso 2 elevó su sobreimpulso a 17,17\,\%. Esto confirma que el diseño debe basarse en el modelo identificado y que el nominal sirve como una prueba de sensibilidad.
-
 \section{Ensayo experimental}
 La programación se realizó desde PSoC Creator 4.4. Antes del cierre de lazo se aplicó un pulso abierto de \SI{0.5}{V}; J5 alcanzó \SI{0.480}{V} y J7 \SI{0.496}{V}, con lo que se verificaron signo, cableado y escala.
 
-Para cada controlador se armó el RIGOL DS1202Z-E en modo de disparo único. CH1 se conectó a J5 para medir el mando y CH2 a J7 para medir la salida. Se usaron puntas en 1X, \SI{0.2}{V/div} en ambos canales, \SI{200}{ms/div}, límite de ancho de banda y disparo sobre CH1 a \SI{50}{mV}. Cada CSV contiene 1200 muestras por canal con separación de \SI{2}{ms}. Las métricas se calcularon desde estos archivos; una media móvil de siete muestras se utilizó sólo para evitar que un código aislado modificara los cruces de umbral.
+Para cada controlador se armó el RIGOL DS1202Z-E en modo de disparo único. CH1 se conectó a J5 para medir el mando y CH2 a J7 para medir la salida. Se usaron puntas en 1X, \SI{0.2}{V/div} en ambos canales, \SI{200}{ms/div} y límite de ancho de banda. El nivel de \SI{50}{mV} se empleó únicamente para disparar sobre CH1; la referencia aplicada fue de \SI{0.5}{V}. Cada CSV contiene 1200 muestras por canal con separación de \SI{2}{ms}. Las métricas se calcularon desde estos archivos; una media móvil de siete muestras se utilizó sólo para evitar que un código aislado modificara los cruces de umbral.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.92\columnwidth]{rigol_caso_2_pantalla_lab9.png}
-\caption{Pantalla original del RIGOL para el caso 2. CH1 (amarillo) es el mando J5 y CH2 (cian) la salida J7; ambas señales ocupan varias divisiones verticales.}
+\caption{Pantalla original del RIGOL para el caso 2. CH1 (amarillo) es el mando J5 y CH2 (cian) la salida J7; el escalón ocupa aproximadamente 2,5 divisiones verticales.}
 \label{fig:rigol_original}
 \end{figure}
 
@@ -195,19 +200,20 @@ $e_{ss}$ [mV] & $u_{\min}$ [mV] & $u_{\max}$ [mV]\\
 \label{fig:experimental}
 \end{figure*}
 
-En el Cuadro~\ref{tab:comparacion}, ``Calculado'' corresponde al modelo identificado con actuador continuo ideal limitado y ``Simulado con DAC'' incorpora cuantización y asimetría de las ramas. Para no confundir rapidez con precisión estática, $t_r$, $t_s$ y $M_p$ se calculan respecto del nivel final de cada respuesta; $e_{ss}$ se conserva respecto de la referencia común de \SI{0.5}{V}. Con esta convención, el establecimiento dinámico sí se alcanzó. Sin embargo, ninguna respuesta ingresó de manera permanente en la banda de seguimiento de $\pm\SI{10}{mV}$ antes de retirar el pulso. Los errores finales equivalen a 3,16\,\%, 3,39\,\% y 4,00\,\% de la referencia.
+En el Cuadro~\ref{tab:comparacion}, ``Calculado'' corresponde al modelo identificado con actuador continuo ideal limitado y ``Simulado con DAC'' incorpora cuantización y asimetría de las ramas. Las métricas $t_r$, $t_s$ y $M_p$ se obtuvieron respecto del nivel final de cada respuesta, mientras que $e_{ss}$ se mantuvo referido a los \SI{0.5}{V}. Los residuos menores que \SI{0.1}{mV} en los modelos se deben a la ventana finita de cálculo; en esas condiciones, la acción integral lleva el error prácticamente a cero. En el montaje, en cambio, ninguna respuesta permaneció dentro de la banda de seguimiento de $\pm\SI{10}{mV}$ antes de retirar el pulso. Los errores finales equivalen a 3,16\,\%, 3,39\,\% y 4,00\,\% de la referencia.
 
-El orden de rapidez coincidió con la predicción. Respecto de la simulación con DAC, el tiempo de subida cambió $-1,4$\,\%, $+33,3$\,\% y $-4,2$\,\%, mientras que el establecimiento dinámico cambió $+6,5$\,\%, $+88,9$\,\% y $-2,2$\,\%. Los casos 1 y 3 reproducen estrechamente la dinámica prevista; la mayor discrepancia real permanece en el caso 2, el diseño más rápido y sensible. Su pico positivo medido de \SI{681}{mV} quedó próximo a los \SI{692}{mV} simulados y lejos del límite de \SI{1}{V}.
+El orden de rapidez coincidió con la predicción. Frente a la simulación con DAC, las diferencias de $t_r$ fueron $-2$, $+4$ y \SI{-2}{ms}; equivalen a una, dos y una muestras, respectivamente. Para $t_s$ las diferencias fueron $+16$, $+16$ y \SI{-2}{ms}. Por ello, el 88,9\,\% del caso 2 debe leerse junto con su diferencia absoluta de \SI{16}{ms}: el porcentaje aumenta porque el valor simulado es de apenas \SI{18}{ms}. Los casos 1 y 3 mostraron la concordancia más estrecha, mientras que el caso 2 conservó la mayor sensibilidad a dinámicas no representadas y a la resolución temporal. Su pico positivo medido de \SI{681}{mV} quedó próximo a los \SI{692}{mV} simulados y lejos del límite de \SI{1}{V}.
 
 \section{Conclusiones}
 El modelo identificado permitió construir un sistema aumentado controlable y un estimador observable. Los tres diseños fueron estables y la solución de Riccati coincidió con \texttt{dlqr} dentro de $3.35\times10^{-11}$.
 
-El barrido de amplitud mostró que \SI{0.5}{V} es una referencia adecuada: duplica la amplitud mínima evaluada, produce señales claramente observables y mantiene el peor mando previsto en \SI{0.687}{V}. Las referencias de 0,75 y \SI{1}{V} no respetaron el margen adoptado y llegaron a saturar.
+El barrido de amplitud mostró que \SI{0.5}{V} es una referencia adecuada: ocupa unas 2,5 divisiones en la escala utilizada y mantiene el peor mando previsto en \SI{0.687}{V}. Las referencias de 0,75 y \SI{1}{V} no respetaron el margen adoptado y llegaron a saturar.
 
-En el banco, los tiempos de subida de 146, 16 y \SI{46}{ms} mantuvieron el orden previsto por el diseño. Los casos 1 y 3 difirieron menos de 5\,\% de la simulación en tiempo de subida; el caso 2 conservó una diferencia de 33,3\,\%. Este último fue el más rápido y también el más exigente, con un intervalo medido de $-223$ a \SI{681}{mV}. Los otros dos casos ofrecieron respuestas más suaves, con picos positivos de 480 y \SI{482}{mV}. Ningún controlador alcanzó el límite físico.
+En el banco, los tiempos de subida de 146, 16 y \SI{46}{ms} mantuvieron el orden previsto por el diseño. Los casos 1 y 3 difirieron menos de 5\,\% de la simulación, y en el caso 2 la diferencia de 33,3\,\% corresponde a \SI{4}{ms}, es decir, dos períodos de muestreo. Este último fue el más rápido y también el más exigente, con un intervalo medido de $-223$ a \SI{681}{mV}. Los otros dos casos ofrecieron respuestas más suaves, con picos positivos de 480 y \SI{482}{mV}. Ningún controlador alcanzó el límite físico.
 
 La diferencia principal apareció en régimen: los errores finales quedaron entre 15,8 y \SI{20.0}{mV}, por lo que no se sostuvo la banda de seguimiento del 2\,\% alrededor de la referencia. La separación explícita entre establecimiento dinámico y error estacionario evita atribuir este sesgo a una respuesta lenta. La ganancia estática real y los offsets de la cadena de medida todavía condicionan la precisión final. Aun así, el caso 2 reprodujo con buena precisión el esfuerzo máximo simulado y los tres ensayos fueron claramente visibles en el osciloscopio. Finalmente, el PSoC quedó programado en \texttt{MONITOR}, con la actuación bloqueada.
 
+\enlargethispage{2\baselineskip}
 \begin{thebibliography}{9}
 \bibitem{ogata}
 K. Ogata, \emph{Discrete-Time Control Systems}, 2nd ed. Prentice Hall, 1995.
