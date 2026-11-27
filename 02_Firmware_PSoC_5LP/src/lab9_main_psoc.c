@@ -211,7 +211,7 @@ int main(void)
     uint8 intentos = 0u;
 
     /* Arranque determinista con interrupciones deshabilitadas y salida nula.
-     * La adquisicion comienza solo tras cargar parametros y esperar 3 s. */
+     * La adquisicion comienza solo tras cargar parametros y esperar 8 s. */
     CyGlobalIntDisable;
     if (!lab9_cargar_parametros((lab9_caso_t)LAB9_CASO, &parametros)) {
         for (;;) { }
@@ -228,7 +228,7 @@ int main(void)
     isr_ClearPending();
 
     UART_Debug_PutString(
-        "\r\n# LAB9 inicio seguro; revisar lab9_config.h; espera 3s\r\n");
+        "\r\n# LAB9 inicio seguro; revisar lab9_config.h; espera 8s\r\n");
     CyDelay(LAB9_INICIO_MS);
     CyGlobalIntEnable;
     Clock_1_Start();

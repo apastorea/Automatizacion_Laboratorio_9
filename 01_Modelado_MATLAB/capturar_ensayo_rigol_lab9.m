@@ -1,10 +1,10 @@
 function archivos = capturar_ensayo_rigol_lab9(caso, perfil)
-% CAPTURAR_ENSAYO_RIGOL_LAB9 Adquiere UART y dos canales del DS1202Z-E.
+% CAPTURAR_ENSAYO_RIGOL_LAB9 Adquiere los dos canales del DS1202Z-E.
 %   ARCHIVOS = CAPTURAR_ENSAYO_RIGOL_LAB9(CASO) arma el osciloscopio en
-%   disparo unico, espera que el PSoC sea programado para el caso indicado,
-%   intenta recibir 600 muestras UART y guarda las formas de onda de CH1 y
-%   CH2 y exige una trama UART nueva del mismo ensayo. El JSON de metadatos
-%   conserva el puerto serie detectado y confirma el sincronismo de ambas fuentes.
+%   disparo unico, espera que el PSoC sea programado para el caso indicado y
+%   guarda las formas de onda de CH1 y CH2. En paralelo intenta recibir las
+%   600 muestras UART del mismo ensayo; su ausencia no invalida la medicion
+%   del osciloscopio y queda indicada expresamente en el JSON de metadatos.
 %   CAPTURAR_ENSAYO_RIGOL_LAB9(CASO,"zoom") usa 100 mV/div. El perfil
 %   "sensibilidad" usa 50 mV/div y se reserva para diagnostico. El perfil
 %   "conexion" configura la prueba abierta de 500 mV. CH1 se encuentra en J5
@@ -20,7 +20,7 @@ function archivos = capturar_ensayo_rigol_lab9(caso, perfil)
 %
 %   El PSoC debe permanecer inicialmente en MONITOR. Ejecute esta funcion y,
 %   cuando aparezca el mensaje de espera, programe desde PSoC Creator el caso
-%   LQR solicitado. El firmware espera 3 s antes de iniciar la adquisicion.
+%   LQR solicitado. El firmware espera 8 s antes de iniciar la adquisicion.
 
 arguments
     caso (1,1) double {mustBeInteger,mustBeMember(caso,1:3)}
@@ -30,8 +30,8 @@ arguments
 end
 
 % Las rutas se resuelven desde el propio archivo para que la adquisicion no
-% dependa de la carpeta activa. Los resultados nuevos llevan el prefijo
-% "rigol" y no sobrescriben las capturas UART previamente validadas.
+% dependa de la carpeta activa. Los perfiles auxiliares llevan un sufijo
+% propio y no sobrescriben la evidencia cuantitativa del perfil dinamico.
 carpetaScript = fileparts(mfilename("fullpath"));
 carpetaCapturas = fullfile(carpetaScript, "..", "04_Ensayos", "capturas");
 if ~isfolder(carpetaCapturas)
@@ -169,7 +169,7 @@ fprintf("RIGOL configurado para el caso %d, perfil %s. Programe ahora " + ...
 
 % La automatizacion crea PROGRAMADO solo despues de que PSoC Creator termina
 % el ciclo SWD. Recién entonces se abre el puerto serie disponible, dentro de
-% la espera de 3 s que
+% la espera de 8 s que
 % el firmware deja antes del escalon, evitando toda contencion con KitProg.
 relojProgramador = tic;
 while ~isfile(rutaProgramado) && toc(relojProgramador) < 120
@@ -181,12 +181,12 @@ delete(rutaProgramado);
 
 % SINGLE se envia despues de la programacion. Asi el osciloscopio no puede
 % dispararse por el ruido producido durante el ciclo SWD y queda armado dentro
-% de la espera de seguridad de 3 s anterior al escalon del firmware.
+% de la espera de seguridad de 8 s anterior al escalon del firmware.
 escribirScpi(osciloscopio, ":SING");
 puertosDisponibles = string(serialportlist("available"));
 assert(~isempty(puertosDisponibles), "LAB9:PuertoSerieAusente", ...
     "No se detecto el puerto serie del KitProg despues de programar.");
-assert(numel(puertosDisponibles) == 1, "LAB9:PuertoSerieAmbiguo", ...
+assert(isscalar(puertosDisponibles), "LAB9:PuertoSerieAmbiguo", ...
     "Se detectaron varios puertos serie (%s); desconecte interfaces ajenas.", ...
     strjoin(puertosDisponibles, ", "));
 nombrePuerto = puertosDisponibles(1);

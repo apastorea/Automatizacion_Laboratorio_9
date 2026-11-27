@@ -13,5 +13,7 @@ pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v1 main.tex
 pdflatex -jobname=Informe_Lab9_Automatizacion_Aldo_Pastore_v1 main.tex
 ```
 
-Las figuras se generan mediante `01_Modelado_MATLAB/diseno_control_optimo_lab9.m`
-y se copian a `Informe_Lab9/figuras` antes de compilar.
+Las figuras se generan mediante los scripts de `01_Modelado_MATLAB`. El informe
+lee los resultados generales desde `05_Resultados/figuras` y conserva en
+`Informe_Lab9/figuras` únicamente las dos imágenes que incorpora como copia
+local.

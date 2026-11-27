@@ -32,7 +32,7 @@ partir de los componentes se conserva únicamente como caso de incertidumbre.
 - `01_Modelado_MATLAB/`: diseño LQR, Riccati, estimador y simulaciones.
 - `02_Firmware_PSoC_5LP/`: proyecto, código y verificación del firmware Lab9.
 - `03_Calibracion/`: comprobaciones que deben repetirse antes del cierre de lazo.
-- `04_Ensayos/`: protocolo y capturas experimentales UART.
+- `04_Ensayos/`: protocolo, capturas experimentales RIGOL y metadatos de adquisición.
 - `05_Resultados/`: CSV y figuras generadas por MATLAB.
 - `06_Informe_IEEE/`: informe técnico en formato IEEE.
 - `07_Registro_de_decisiones/`: trazabilidad de parámetros y decisiones.
