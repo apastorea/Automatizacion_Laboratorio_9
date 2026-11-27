@@ -193,7 +193,7 @@ $e_{ss}$ [mV] & $u_{\min}$ [mV] & $u_{\max}$ [mV]\\
 \end{tabular}
 \end{table*}
 
-\begin{figure*}[!b]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=0.92\textwidth,height=0.48\textheight,keepaspectratio]{respuesta_experimental_rigol_lab9.png}
 \caption{Señales experimentales reconstruidas directamente desde los CSV del RIGOL. A la izquierda se muestran J7 y su media móvil; a la derecha, el mando físico en J5.}
@@ -204,6 +204,12 @@ En el Cuadro~\ref{tab:comparacion}, ``Calculado'' corresponde al modelo identifi
 
 El orden de rapidez coincidió con la predicción. Frente a la simulación con DAC, las diferencias de $t_r$ fueron $-2$, $+4$ y \SI{-2}{ms}; equivalen a una, dos y una muestras, respectivamente. Para $t_s$ las diferencias fueron $+16$, $+16$ y \SI{-2}{ms}. Por ello, el 88,9\,\% del caso 2 debe leerse junto con su diferencia absoluta de \SI{16}{ms}: el porcentaje aumenta porque el valor simulado es de apenas \SI{18}{ms}. Los casos 1 y 3 mostraron la concordancia más estrecha, mientras que el caso 2 conservó la mayor sensibilidad a dinámicas no representadas y a la resolución temporal. Su pico positivo medido de \SI{681}{mV} quedó próximo a los \SI{692}{mV} simulados y lejos del límite de \SI{1}{V}.
 
+% Se resuelven los flotantes de doble columna antes de iniciar el cierre del
+% informe, para que la tabla y la figura experimental no separen las
+% conclusiones de las referencias.
+\clearpage
+\balance
+
 \section{Conclusiones}
 El modelo identificado permitió construir un sistema aumentado controlable y un estimador observable. Los tres diseños fueron estables y la solución de Riccati coincidió con \texttt{dlqr} dentro de $3.35\times10^{-11}$.
 
@@ -213,7 +219,6 @@ En el banco, los tiempos de subida de 146, 16 y \SI{46}{ms} mantuvieron el orden
 
 La diferencia principal apareció en régimen: los errores finales quedaron entre 15,8 y \SI{20.0}{mV}, por lo que no se sostuvo la banda de seguimiento del 2\,\% alrededor de la referencia. La separación explícita entre establecimiento dinámico y error estacionario evita atribuir este sesgo a una respuesta lenta. La ganancia estática real y los offsets de la cadena de medida todavía condicionan la precisión final. Aun así, el caso 2 reprodujo con buena precisión el esfuerzo máximo simulado y los tres ensayos fueron claramente visibles en el osciloscopio. Finalmente, el PSoC quedó programado en \texttt{MONITOR}, con la actuación bloqueada.
 
-\enlargethispage{2\baselineskip}
 \begin{thebibliography}{9}
 \bibitem{ogata}
 K. Ogata, \emph{Discrete-Time Control Systems}, 2nd ed. Prentice Hall, 1995.
@@ -223,7 +228,7 @@ G. F. Franklin, J. D. Powell and M. L. Workman, \emph{Digital Control of Dynamic
 \end{thebibliography}
 
 \AddToShipoutPictureFG{%
-  \ifnum\value{page}=4
+  \ifnum\value{page}=5
     \AtPageLowerLeft{%
       \raisebox{0.20in}{\makebox[\paperwidth][r]{\footnotesize SDG\hspace*{0.25in}}}%
     }%
